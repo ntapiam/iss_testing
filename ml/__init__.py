@@ -16,7 +16,6 @@ class DenseNet(nn.Module):
         self.stack = nn.Sequential(*layers)
         self.logits = nn.Sequential(
                 nn.Linear(widths[-1], n_classes),
-                nn.Tanh(),
                 nn.LogSoftmax(dim=1))
 
     def forward(self, x):
