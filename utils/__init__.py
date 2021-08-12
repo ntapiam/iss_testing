@@ -1,5 +1,8 @@
 import torch
 from isstorch import compute
+from sktime.utils.data_io import load_from_tsfile_to_dataframe
+from sktime.datatypes._panel._convert import from_nested_to_3d_numpy
+from numpy import unique
 
 
 def generate_examples():
@@ -18,3 +21,13 @@ def generate_examples():
 
 def compute_signatures(X, level=2):
     return torch.vstack([compute(x, level) for x in X])
+
+
+def load_data(dataset, split='train'):
+    basename = f'./data/{dataset}/{dataset}_{split.upper()}.ts'
+    X, y = load_from_tsfile_to_dataframe(basename)
+    X = from_nested_to_3d_numpy(X).transpose((0,2,1))
+    X = torch.tensor(X).type(torch.float)
+    _, y = unique(y, return_inverse=True)
+    y = torch.tensor(y).type(torch.long)
+    return X, y
