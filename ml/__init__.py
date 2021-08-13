@@ -9,14 +9,14 @@ class DenseNet(nn.Module):
         
         widths = [in_features] + widths
         layers = [
-            nn.Sequential(nn.Linear(p, n), nn.ReLU())
+            (nn.Linear(p, n), nn.ReLU())
             for p, n in zip(widths[:-1], widths[1:])
             ]
 
-        self.stack = nn.Sequential(*layers)
+        self.stack = nn.Sequential(*[l for sub in layers for l in sub])
         self.logits = nn.Sequential(
                 nn.Linear(widths[-1], n_classes),
-                nn.LogSoftmax(dim=1))
+                )
 
     def forward(self, x):
         x = self.batchnorm(x) if x.dim() > 1 else x
@@ -44,12 +44,13 @@ def test_loop(model, loss_fn, dataloader):
     device = model.device()
     correct, loss = 0, 0.0
     total_samples = len(dataloader.dataset)
+    num_batches = len(dataloader)
 
     for X, y in dataloader:
         X, y = X.to(device), y.to(device)
 
         pred = model(X)
-        loss += loss_fn(pred,y)
-        correct += (pred.argmin(1) == y).type(torch.long).sum().item()
+        loss += loss_fn(pred,y).item()
+        correct += (pred.argmax(1) == y).type(torch.float).sum().item()
 
-    return correct / total_samples, loss / total_samples
+    return correct / total_samples, loss / num_batches
